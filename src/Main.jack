@@ -1,0 +1,26 @@
+class Main {
+    static Array matrix;
+    static int kek;
+
+    function void main() {
+        var Array temp;
+        var int i, j;
+        let matrix = Array.new(4);
+        let i = 0;
+        let j = 0;
+        while (i < 4) {
+            let matrix[i] = Array.new(4);
+            while (j < 4) {
+                let temp = matrix[i];
+                let temp[j] = Math.multiply(10, i) + j;
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+        let temp = matrix[1];
+        let kek = temp[2];
+
+        return; 
+    }
+}
