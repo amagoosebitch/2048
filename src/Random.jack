@@ -1,0 +1,18 @@
+class Random {
+    static int seed, a, c, m;
+
+    constructor Random new(int seedArg, int aArg, int cArg, int mArg) {
+        let seed = seedArg;
+        let a = aArg;
+        let c = cArg;
+        let m = mArg;
+    }
+
+    function int random() {
+		var int result;
+		let result = MathExtension.modulus(((seed*a) + c), m);
+		let seed = result;
+		return result;
+	}
+
+}
