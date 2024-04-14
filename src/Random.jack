@@ -15,6 +15,7 @@ class Random {
 		var int result;
 		let result = MathExtension.modulus(((seed*a) + c), m);
 		let seed = result;
+
 		return result;
 	}
 

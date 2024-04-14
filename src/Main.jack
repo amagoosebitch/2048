@@ -2,12 +2,13 @@ class Main {
 	function void main() {
         var Field поле;
 		var int key;
-        do Random.init(69, 13, 37, 160);
-		let поле = Field.new(32, 32);
 
+        do Random.init(69, 13, 37, 160);
+
+		let поле = Field.new();
+        do Drawer.prepareScreen(поле.getX(), поле.getY());
 		do поле.spawnRandomNum();
 		do поле.spawnRandomNum();
-		
 		do поле.display();
 		
 		while (true) {
@@ -36,19 +37,19 @@ class Main {
 				// R: ретрай
 				if (key = 82) {
                     do поле.dispose();
-					let поле = Field.new(32, 32);
-
+					let поле = Field.new();
+                    do Drawer.prepareScreen(поле.getX(), поле.getY());
 					do поле.spawnRandomNum();
 					do поле.spawnRandomNum();
 				}
+
 				do поле.display(); 
 
 				while (Memory.peek(24576) = key) {}
 			}
 
 			while (поле.getFail()) {
-				
-				do Output.moveCursor(0, 0);
+				do Output.moveCursor(6, 27);
 				do Output.printString("GAME FAILED");
 				
 				while (Memory.peek(24576) = 0) {}
@@ -58,8 +59,8 @@ class Main {
                 // g - новая *G*ame
 				if (key = 71) {
 					do поле.dispose();
-					let поле = Field.new(32, 32);		
-					
+					let поле = Field.new();		
+					do Drawer.prepareScreen(поле.getX(), поле.getY());
 					do поле.spawnRandomNum();
 					do поле.spawnRandomNum();
 					do поле.display();
@@ -69,8 +70,7 @@ class Main {
 			}
 
             while (поле.getWin()) {
-				
-				do Output.moveCursor(0, 0);
+				do Output.moveCursor(6, 28);
 				do Output.printString("GAME WON");
 				
 				while (Memory.peek(24576) = 0) {}
@@ -80,8 +80,8 @@ class Main {
                 // g - новая *G*ame
 				if (key = 71) {
 					do поле.dispose();
-					let поле = Field.new(32, 32);		
-					
+					let поле = Field.new();	
+					do Drawer.prepareScreen(поле.getX(), поле.getY());
 					do поле.spawnRandomNum();
 					do поле.spawnRandomNum();
 					do поле.display();

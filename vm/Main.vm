@@ -5,10 +5,14 @@ push constant 37
 push constant 160
 call Random.init 4
 pop temp 0
-push constant 32
-push constant 32
-call Field.new 2
+call Field.new 0
 pop local 0
+push local 0
+call Field.getX 1
+push local 0
+call Field.getY 1
+call Drawer.prepareScreen 2
+pop temp 0
 push local 0
 call Field.spawnRandomNum 1
 pop temp 0
@@ -98,10 +102,14 @@ label IF_TRUE4
 push local 0
 call Field.dispose 1
 pop temp 0
-push constant 32
-push constant 32
-call Field.new 2
+call Field.new 0
 pop local 0
+push local 0
+call Field.getX 1
+push local 0
+call Field.getY 1
+call Drawer.prepareScreen 2
+pop temp 0
 push local 0
 call Field.spawnRandomNum 1
 pop temp 0
@@ -128,8 +136,8 @@ push local 0
 call Field.getFail 1
 not
 if-goto WHILE_END4
-push constant 0
-push constant 0
+push constant 6
+push constant 27
 call Output.moveCursor 2
 pop temp 0
 push constant 11
@@ -179,10 +187,14 @@ label IF_TRUE5
 push local 0
 call Field.dispose 1
 pop temp 0
-push constant 32
-push constant 32
-call Field.new 2
+call Field.new 0
 pop local 0
+push local 0
+call Field.getX 1
+push local 0
+call Field.getY 1
+call Drawer.prepareScreen 2
+pop temp 0
 push local 0
 call Field.spawnRandomNum 1
 pop temp 0
@@ -210,8 +222,8 @@ push local 0
 call Field.getWin 1
 not
 if-goto WHILE_END7
-push constant 0
-push constant 0
+push constant 6
+push constant 28
 call Output.moveCursor 2
 pop temp 0
 push constant 8
@@ -255,10 +267,14 @@ label IF_TRUE6
 push local 0
 call Field.dispose 1
 pop temp 0
-push constant 32
-push constant 32
-call Field.new 2
+call Field.new 0
 pop local 0
+push local 0
+call Field.getX 1
+push local 0
+call Field.getY 1
+call Drawer.prepareScreen 2
+pop temp 0
 push local 0
 call Field.spawnRandomNum 1
 pop temp 0
