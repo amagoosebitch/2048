@@ -11,7 +11,7 @@ class Main {
 		do поле.display();
 		
 		while (true) {
-			while (~поле.getFail()) {
+			while (~поле.getFail() & ~поле.getWin()) {
 				while (Memory.peek(24576) = 0) {}
 				
                 let key = Memory.peek(24576);
@@ -50,6 +50,28 @@ class Main {
 				
 				do Output.moveCursor(0, 0);
 				do Output.printString("GAME FAILED");
+				
+				while (Memory.peek(24576) = 0) {}
+				
+				let key = Memory.peek(24576);
+				
+                // g - новая *G*ame
+				if (key = 71) {
+					do поле.dispose();
+					let поле = Field.new(32, 32);		
+					
+					do поле.spawnRandomNum();
+					do поле.spawnRandomNum();
+					do поле.display();
+				}
+				
+				while (~(Memory.peek(24576) = 0)) {}
+			}
+
+            while (поле.getWin()) {
+				
+				do Output.moveCursor(0, 0);
+				do Output.printString("GAME WON");
 				
 				while (Memory.peek(24576) = 0) {}
 				
