@@ -27,6 +27,10 @@ label WHILE_EXP1
 push local 0
 call Field.getFail 1
 not
+push local 0
+call Field.getWin 1
+not
+and
 not
 if-goto WHILE_END1
 label WHILE_EXP2
@@ -201,6 +205,82 @@ goto WHILE_EXP6
 label WHILE_END6
 goto WHILE_EXP4
 label WHILE_END4
+label WHILE_EXP7
+push local 0
+call Field.getWin 1
+not
+if-goto WHILE_END7
+push constant 0
+push constant 0
+call Output.moveCursor 2
+pop temp 0
+push constant 8
+call String.new 1
+push constant 71
+call String.appendChar 2
+push constant 65
+call String.appendChar 2
+push constant 77
+call String.appendChar 2
+push constant 69
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 87
+call String.appendChar 2
+push constant 79
+call String.appendChar 2
+push constant 78
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+label WHILE_EXP8
+push constant 24576
+call Memory.peek 1
+push constant 0
+eq
+not
+if-goto WHILE_END8
+goto WHILE_EXP8
+label WHILE_END8
+push constant 24576
+call Memory.peek 1
+pop local 1
+push local 1
+push constant 71
+eq
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push local 0
+call Field.dispose 1
+pop temp 0
+push constant 32
+push constant 32
+call Field.new 2
+pop local 0
+push local 0
+call Field.spawnRandomNum 1
+pop temp 0
+push local 0
+call Field.spawnRandomNum 1
+pop temp 0
+push local 0
+call Field.display 1
+pop temp 0
+label IF_FALSE6
+label WHILE_EXP9
+push constant 24576
+call Memory.peek 1
+push constant 0
+eq
+not
+not
+if-goto WHILE_END9
+goto WHILE_EXP9
+label WHILE_END9
+goto WHILE_EXP7
+label WHILE_END7
 goto WHILE_EXP0
 label WHILE_END0
 push constant 0
