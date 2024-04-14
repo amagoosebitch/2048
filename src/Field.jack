@@ -352,12 +352,12 @@ class Field {
 	}
 
     method void setWin() {
-		let won = true;
+		let win = true;
 		return;
 	}
 
 	method boolean getWin() {
-		return won;
+		return win;
 	}
 
 	method boolean compareState(Field other) {
