@@ -1,0 +1,24 @@
+function Random.init 0
+push argument 0
+pop static 0
+push argument 1
+pop static 1
+push argument 2
+pop static 2
+push argument 3
+pop static 3
+push constant 0
+return
+function Random.random 1
+push static 0
+push static 1
+call Math.multiply 2
+push static 2
+add
+push static 3
+call MathExtension.modulus 2
+pop local 0
+push local 0
+pop static 0
+push local 0
+return
