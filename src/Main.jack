@@ -1,26 +1,74 @@
 class Main {
-    static Array matrix;
-    static int kek;
+	function void main() {
+        var Field поле;
+		var int key;
+        do Random.init(69, 13, 37, 160);
+		let поле = Field.new(32, 32);
 
-    function void main() {
-        var Array temp;
-        var int i, j;
-        let matrix = Array.new(4);
-        let i = 0;
-        let j = 0;
-        while (i < 4) {
-            let matrix[i] = Array.new(4);
-            while (j < 4) {
-                let temp = matrix[i];
-                let temp[j] = Math.multiply(10, i) + j;
-                let j = j + 1;
-            }
-            let j = 0;
-            let i = i + 1;
-        }
-        let temp = matrix[1];
-        let kek = temp[2];
+		do поле.spawnRandomNum();
+		do поле.spawnRandomNum();
+		
+		do поле.display();
+		
+		while (true) {
+			while (~поле.getFail()) {
+				while (Memory.peek(24576) = 0) {}
+				
+                let key = Memory.peek(24576);
+				
+                // влево
+				if (key = 130) {
+					do поле.moveLeft(false);
+				}
+				// вверх
+				if (key = 131) {
+					do поле.moveUp(false);
+				}
+				// вправо
+				if (key = 132) {
+					do поле.moveRight(false);
+				}
+				// вниз
+				if (key = 133) {
+					do поле.moveDown(false);
+				}
 
-        return; 
-    }
+				// R: ретрай
+				if (key = 82) {
+                    do поле.dispose();
+					let поле = Field.new(32, 32);
+
+					do поле.spawnRandomNum();
+					do поле.spawnRandomNum();
+				}
+				do поле.display(); 
+
+				while (Memory.peek(24576) = key) {}
+			}
+
+			while (поле.getFail()) {
+				
+				do Output.moveCursor(0, 0);
+				do Output.printString("GAME FAILED");
+				
+				while (Memory.peek(24576) = 0) {}
+				
+				let key = Memory.peek(24576);
+				
+                // g - новая *G*ame
+				if (key = 71) {
+					do поле.dispose();
+					let поле = Field.new(32, 32);		
+					
+					do поле.spawnRandomNum();
+					do поле.spawnRandomNum();
+					do поле.display();
+				}
+				
+				while (~(Memory.peek(24576) = 0)) {}
+			}
+		}
+
+		return;
+	}
 }

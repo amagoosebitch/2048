@@ -1,11 +1,14 @@
 class Random {
+    field int seed, a, c, m;
     static int seed, a, c, m;
 
-    constructor Random new(int seedArg, int aArg, int cArg, int mArg) {
+    function void init(int seedArg, int aArg, int cArg, int mArg) {
         let seed = seedArg;
         let a = aArg;
         let c = cArg;
         let m = mArg;
+
+        return;
     }
 
     function int random() {

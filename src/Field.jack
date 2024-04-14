@@ -1,0 +1,759 @@
+class Field {
+	field int startX, startY, score;
+	field boolean failed;
+	field Array поле, tempCol, tempRow;
+
+	constructor Field new(int startXArg, int startYArg) {
+		var int i, j;
+		let startX = startXArg;
+		let startY = startYArg;
+		let score = 0;
+		let failed = false;
+		let i = 0;
+        let поле = Array.new(16);
+        let tempCol = Array.new(4);
+        let tempRow = Array.new(4);
+		while (i < 4) {
+            while (j < 4) {
+                let поле[i*4+j] = 0;
+                let j = j + 1;
+            }
+            let j = 0;
+			let i = i + 1;
+		}
+        
+		return this;
+	}
+
+	method void dispose() {
+        do поле.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+    method void slideRowLeft(Array row) {
+        var int temp, i, j;
+        var boolean exit;
+
+		let i = 1;
+
+		while (i < 4) {
+			let exit = false;
+
+			if (~(row[i] = 0)) {
+
+				let j = i;
+				while (~exit) {
+					let j = j - 1;
+                    // другая цифра
+					if (~(row[j] = 0)) {
+						let exit = true;
+						let j = j + 1;
+						let temp = row[i];
+						let row[i] = 0;
+						let row[j] = temp;
+					}
+					// стенка
+					if ((j = 0) & ~exit) {
+						let exit = true;
+						let temp = row[i];
+						let row[i] = 0;
+						let row[j] = temp;
+					}
+				}
+			}
+			let i = i + 1;
+		}
+        return;
+    }
+
+	method void slideLeft() {
+        var int i, j, temp;
+
+		let i = 0;
+        while (i < 4) {
+            let j = 0;
+            while (j < 4) {
+                let tempRow[j] = поле[4*i + j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempRow);
+            while (j < 4) {
+                let поле[4*i + j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+		return;
+	}
+
+	method void slideRight() {
+		var int i, j;
+
+		let i = 0;
+        let j = 0;
+        while (i < 4) {
+            while (j < 4) {
+                let tempRow[j] = поле[i*4+3-j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempRow);
+            while (j < 4) {
+                let поле[i*4+3-j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+        return;
+	}
+
+    method void mergeRowLeft(Array row) {
+        var int i;
+        let i = 0;
+
+        while (i < 3) {
+			if (row[i] = row[i+1]) {
+				let row[i] = row[i]*2;
+				let score = score + row[i];
+				let row[i + 1] = 0;
+			}
+            let i = i + 1;
+        }
+        return;
+    }
+
+	method void mergeLeft() {
+        var int i, j;
+		
+		let i = 0;
+        let j = 0;
+		while (i < 4) { 
+            while (j < 4) {
+                let tempRow[j] = поле[4*i + j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempRow);
+            while (j < 4) {
+                let поле[4*i + j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+		}
+		return; 
+	}
+
+	method void mergeRight() {
+		var int i, j;
+		let i = 0;
+        let j = 0;
+		while (i < 4) { 
+            while (j < 4) {
+                let tempRow[j] = поле[4*i+3-j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempRow);
+            while (j < 4) {
+                let поле[4*i+3-j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+		}
+		return; 
+	}
+
+	method void moveLeft(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideLeft();
+		do mergeLeft();
+		do slideLeft();
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose(); 
+        if (~test) {
+            do checkFailed();
+        }
+		return; 
+	}
+
+	method void moveRight(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideRight();
+		do mergeRight();
+		do slideRight();
+		
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose();
+        if (~test) {
+            do checkFailed();
+        }
+		return;
+	}
+
+	method void slideDown() {
+		var int i, j;
+        let i = 0;
+        let j = 0;
+        
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[12 - (4*j) + i];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempCol);
+            while (j < 4) {
+                let поле[12 - (4*j) + i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+        return;
+	}
+
+	method void mergeDown() {
+		var int i, j;
+        let i = 0;
+        let j = 0;
+        
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[12 - (4*j) + i];  
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempCol);
+            while (j < 4) {
+                let поле[12 - (4*j) + i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+
+		return;
+	}
+
+	method void moveDown(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideDown();
+		do mergeDown();
+		do slideDown();
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose();
+        if (~test) {
+            do checkFailed();
+        }
+		return;
+	}
+
+    method void slideUp() {
+		var int i, j;
+
+        let i = 0;
+        let j = 0;
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[4*j+3-i];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempCol);
+            while (j < 4) {
+                let поле[4*j+3-i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+
+        return;
+	}
+
+	method void mergeUp() {
+        var int i, j;
+
+        
+        let i = 0;
+        let j = 0;
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[4*j+3-i];
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempCol);
+            while (j < 4) {
+                let поле[4*j+3-i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+
+		return; 
+	}
+
+	method void moveUp(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideUp();
+		do mergeUp();
+		do slideUp();
+
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose();
+        if (~test) {
+            do checkFailed();
+        }
+		return;
+	}
+
+	method Array getState() {
+		var Array result;
+        var int i;
+        let i = 0;
+		let result = Array.new(16);
+        while (i < 16) {
+            let result[i] = поле[i];
+            let i = i + 1;
+        }
+		return result;
+	}
+
+	method void setFailed() {
+		let failed = true;
+		return;
+	}
+
+	method boolean getFail() {
+		return failed;
+	}
+
+
+	method boolean compareState(Field other) {
+		var Array полеOther;
+        var int i, j;
+        var boolean result;
+        let i = 0;
+        let j = 0;
+        let result = true;
+        let полеOther = other.getState();
+        while (result & (i < 4)) {
+            while (result & (j < 4)) {
+                let result = result & (поле[4*i+j] = полеOther[4*i+j]);
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i+1;
+        }
+        do полеOther.dispose();
+		return result;
+	}
+
+	method void spawnRandomNum() {
+		var int location, rowNum, colNum, iterations, num;
+		let iterations = 0;
+
+		let num = 2;
+		if (Random.random() > 143) {
+			let num = 4;
+		}
+		while (iterations < 160) {
+			let iterations = iterations + 1;
+			let location = Random.random() / 10;
+
+            if (поле[location] = 0) {
+                let поле[location] = num;
+                return;
+            } 
+		}
+		return;
+	}
+
+	method void configureState(Array prevField) {
+        var int i;
+        let i = 0;
+        while (i < 16) {
+            let поле[i] = prevField[i];
+            let i = i +1;
+        }
+		return;
+	}
+
+	method void setScore(int scoreArg) {
+		let score = scoreArg;
+		return;
+	}
+
+	method Field copy() {
+		var Field copy;
+        var Array newПоле;
+        var int i;
+        let i = 0;
+
+        let newПоле = Array.new(16);
+        while (i < 16) {
+            let newПоле[i] = поле[i];
+            let i = i + 1;
+        }
+		let copy = Field.new(startX, startY);
+		do copy.configureState(newПоле);
+        do newПоле.dispose();
+		do copy.setScore(score);
+		return copy;
+	}
+
+	method void checkFailed() {
+		var Field failTest;
+		let failTest = copy();
+		do failTest.moveLeft(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.moveUp(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.moveRight(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.moveDown(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.dispose();
+		do setFailed();
+		return;
+	}
+
+	method void display() {
+		var int x, y, memAddress;
+		var String string;
+
+		do Screen.setColor(true); 
+		do Screen.drawRectangle(0, 24, 511, 255); 
+		do Screen.drawRectangle(0, 0, 511, 8); 
+		do Screen.drawRectangle(100, 0, 511, 255);
+        
+		do Screen.setColor(false);
+		do Screen.drawRectangle(0, 8, 100, 24);
+
+		do Output.moveCursor(1, 0);
+		let string = "SCORE: ";
+		do Output.printString(string);
+		do string.dispose();
+		do Output.printInt(score);
+
+		do Screen.setColor(false);
+
+		do Screen.drawRectangle(startX - 4, startY - 4, startX + 68, startY + 68);
+
+		do Screen.setColor(true);
+		do Screen.drawRectangle(startX, startY, startX + 64, startY + 64);
+
+		let x = 0;
+		let y = 0;
+		while (y < 4) {
+            do Screen.setColor(false);
+            do Screen.drawRectangle(startX + (16*x) + 1, startY + (16*y) + 1, 
+            	startX + (16*x) + 15, startY + (16*y) + 15);
+            
+
+			let memAddress = 16384 + 32 + (startX/16) + (startY*32) + (y*512) + x;
+            
+            do draw(memAddress, поле[4*y+x]);
+			let x = x + 1;
+			if (x > 3) {
+				let y = y + 1;
+				let x = 0;
+			}
+		}
+		return;
+	}
+
+    method void draw(int memAddress, int value) {
+        if (value = 2) {
+            do draw2(memAddress);
+        } if (value = 4) {
+            do draw4(memAddress);
+        } if (value = 8) {
+            do draw8(memAddress);
+        } if (value = 16) {
+            do draw16(memAddress);
+        } if (value = 32) {
+            do draw32(memAddress);
+        } if (value = 64) {
+            do draw64(memAddress);
+        } if (value = 128) {
+            do draw128(memAddress);
+        } if (value = 256) {
+            do draw256(memAddress);
+        } if (value = 512) {
+            do draw512(memAddress);
+        } if (value = 1024) {
+            do draw1024(memAddress);
+        } if (value = 2048) {
+            do draw2048(memAddress);
+        }
+        return;
+    }
+
+    method void draw2(int memAddress) {
+        // рисуем 2
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 2017);
+        do Memory.poke(memAddress+96, 3121);
+        do Memory.poke(memAddress+128, 2065);
+        do Memory.poke(memAddress+160, 3073);
+        do Memory.poke(memAddress+192, 1537);
+        do Memory.poke(memAddress+224, 769);
+        do Memory.poke(memAddress+256, 385);
+        do Memory.poke(memAddress+288, 193);
+        do Memory.poke(memAddress+320, 97);
+        do Memory.poke(memAddress+352, 49);
+        do Memory.poke(memAddress+384, 4081);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw4(int memAddress) {
+        // рисуем 4
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 1057);
+        do Memory.poke(memAddress+96, 1057);
+        do Memory.poke(memAddress+128, 1057);
+        do Memory.poke(memAddress+160, 1057);
+        do Memory.poke(memAddress+192, 1057);
+        do Memory.poke(memAddress+224, 2017);
+        do Memory.poke(memAddress+256, 1025);
+        do Memory.poke(memAddress+288, 1025);
+        do Memory.poke(memAddress+320, 1025);
+        do Memory.poke(memAddress+352, 1025);
+        do Memory.poke(memAddress+384, 1025);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw8(int memAddress) {
+        // рисуем 8
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 1985);
+        do Memory.poke(memAddress+96, 3169);
+        do Memory.poke(memAddress+128, 2081);
+        do Memory.poke(memAddress+160, 2081);
+        do Memory.poke(memAddress+192, 3169);
+        do Memory.poke(memAddress+224, 1985);
+        do Memory.poke(memAddress+256, 3169);
+        do Memory.poke(memAddress+288, 2081);
+        do Memory.poke(memAddress+320, 2081);
+        do Memory.poke(memAddress+352, 3169);
+        do Memory.poke(memAddress+384, 1985);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw16(int memAddress) {
+        // рисуем 16
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 3857);
+        do Memory.poke(memAddress+96, 6545);
+        do Memory.poke(memAddress+128, 4241);
+        do Memory.poke(memAddress+160, 145);
+        do Memory.poke(memAddress+192, 145);
+        do Memory.poke(memAddress+224, 3985);
+        do Memory.poke(memAddress+256, 6545);
+        do Memory.poke(memAddress+288, 4241);
+        do Memory.poke(memAddress+320, 4241);
+        do Memory.poke(memAddress+352, 6545);
+        do Memory.poke(memAddress+384, 3857);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw32(int memAddress) {
+        // рисуем 32
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 15481);
+        do Memory.poke(memAddress+96, 26317);
+        do Memory.poke(memAddress+128, 17029);
+        do Memory.poke(memAddress+160, 16513);
+        do Memory.poke(memAddress+192, 24769);
+        do Memory.poke(memAddress+224, 12409);
+        do Memory.poke(memAddress+256, 6337);
+        do Memory.poke(memAddress+288, 2177);
+        do Memory.poke(memAddress+320, 3205);
+        do Memory.poke(memAddress+352, 1741);
+        do Memory.poke(memAddress+384, 32377);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw64(int memAddress) {
+        // рисуем 64
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 17017);
+        do Memory.poke(memAddress+96, 17101);
+        do Memory.poke(memAddress+128, 17029);
+        do Memory.poke(memAddress+160, 16901);
+        do Memory.poke(memAddress+192, 16901);
+        do Memory.poke(memAddress+224, 32381);
+        do Memory.poke(memAddress+256, 16589);
+        do Memory.poke(memAddress+288, 16517);
+        do Memory.poke(memAddress+320, 16517);
+        do Memory.poke(memAddress+352, 16589);
+        do Memory.poke(memAddress+384, 16505);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw128(int memAddress) {
+        // рисуем 128
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 14565);
+        do Memory.poke(memAddress+96, 28085);
+        do Memory.poke(memAddress+128, 17685);
+        do Memory.poke(memAddress+160, 17669);
+        do Memory.poke(memAddress+192, 28037);
+        do Memory.poke(memAddress+224, 14469);
+        do Memory.poke(memAddress+256, 27845);
+        do Memory.poke(memAddress+288, 17509);
+        do Memory.poke(memAddress+320, 17461);
+        do Memory.poke(memAddress+352, 27669);
+        do Memory.poke(memAddress+384, 14837);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw256(int memAddress) {
+        // рисуем 256
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 31677);
+        do Memory.poke(memAddress+96, 18597);
+        do Memory.poke(memAddress+128, 18597);
+        do Memory.poke(memAddress+160, 2209);
+        do Memory.poke(memAddress+192, 2225);
+        do Memory.poke(memAddress+224, 2193);
+        do Memory.poke(memAddress+256, 31641);
+        do Memory.poke(memAddress+288, 18953);
+        do Memory.poke(memAddress+320, 18957);
+        do Memory.poke(memAddress+352, 18949);
+        do Memory.poke(memAddress+384, 31677);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw512(int memAddress) {
+        // рисуем 512
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 14717);
+        do Memory.poke(memAddress+96, 27909);
+        do Memory.poke(memAddress+128, 17669);
+        do Memory.poke(memAddress+160, 16645);
+        do Memory.poke(memAddress+192, 24837);
+        do Memory.poke(memAddress+224, 12605);
+        do Memory.poke(memAddress+256, 4449);
+        do Memory.poke(memAddress+288, 6465);
+        do Memory.poke(memAddress+320, 3393);
+        do Memory.poke(memAddress+352, 1377);
+        do Memory.poke(memAddress+384, 32061);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw1024(int memAddress) {
+        // рисуем 1024
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 1);
+        do Memory.poke(memAddress+96, 1);
+        do Memory.poke(memAddress+128, 21029);
+        do Memory.poke(memAddress+160, 22389);
+        do Memory.poke(memAddress+192, 21845);
+        do Memory.poke(memAddress+224, 29781);
+        do Memory.poke(memAddress+256, 18005);
+        do Memory.poke(memAddress+288, 17269);
+        do Memory.poke(memAddress+320, 18213);
+        do Memory.poke(memAddress+352, 1);
+        do Memory.poke(memAddress+384, 1);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+
+    method void draw2048(int memAddress) {
+        // рисуем 2048
+        do Memory.poke(memAddress+0, 1);
+        do Memory.poke(memAddress+32, 1);
+        do Memory.poke(memAddress+64, 1);
+        do Memory.poke(memAddress+96, 1);
+        do Memory.poke(memAddress+128, 1);
+        do Memory.poke(memAddress+160, 30445);
+        do Memory.poke(memAddress+192, 22185);
+        do Memory.poke(memAddress+224, 30381);
+        do Memory.poke(memAddress+256, 21669);
+        do Memory.poke(memAddress+288, 29933);
+        do Memory.poke(memAddress+320, 1);
+        do Memory.poke(memAddress+352, 1);
+        do Memory.poke(memAddress+384, 1);
+        do Memory.poke(memAddress+416, 1);
+        do Memory.poke(memAddress+448, 1);
+        do Memory.poke(memAddress+480, -1);
+        return;
+    }
+}
