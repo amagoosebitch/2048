@@ -2,6 +2,7 @@ class Main {
 	function void main() {
         var Field поле;
 		var int key;
+        do Random.init(69, 13, 37, 160);
 		let поле = Field.new(32, 32);
 
 		do поле.spawnRandomNum();
@@ -10,14 +11,10 @@ class Main {
 		do поле.display();
 		
 		while (true) {
-			// In a while loop with the condition of the game not being failed...
 			while (~поле.getFail()) {
-				// Display the поле. 
-				// do поле.display();
-				// While the key is 0, do nothing. 
 				while (Memory.peek(24576) = 0) {}
-				// Check the key. 
-				let key = Memory.peek(24576);
+				
+                let key = Memory.peek(24576);
 				
                 // влево
 				if (key = 130) {
@@ -36,7 +33,7 @@ class Main {
 					do поле.moveDown(false);
 				}
 
-				// R: Retry the game.
+				// R: ретрай
 				if (key = 82) {
                     do поле.dispose();
 					let поле = Field.new(32, 32);
@@ -44,14 +41,11 @@ class Main {
 					do поле.spawnRandomNum();
 					do поле.spawnRandomNum();
 				}
-				// Display the поле.
 				do поле.display(); 
 
-				// While the key is not 0, do nothing. 
 				while (Memory.peek(24576) = key) {}
 			}
-			// In a while loop with the condition of the game not being 
-			// restarted...
+
 			while (поле.getFail()) {
 				
 				do Output.moveCursor(0, 0);
@@ -61,7 +55,7 @@ class Main {
 				
 				let key = Memory.peek(24576);
 				
-                // g - new *G*ame
+                // g - новая *G*ame
 				if (key = 71) {
 					do поле.dispose();
 					let поле = Field.new(32, 32);		

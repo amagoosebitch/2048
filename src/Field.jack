@@ -1,48 +1,462 @@
 class Field {
 	field int startX, startY, score;
 	field boolean failed;
-	field Array поле;
-    field Random rnd;
+	field Array поле, tempCol, tempRow;
 
 	constructor Field new(int startXArg, int startYArg) {
 		var int i, j;
-        var Array tempRow;
 		let startX = startXArg;
 		let startY = startYArg;
 		let score = 0;
 		let failed = false;
 		let i = 0;
-        let поле = Array.new(4);
+        let поле = Array.new(16);
+        let tempCol = Array.new(4);
+        let tempRow = Array.new(4);
 		while (i < 4) {
-			let поле[i] = Array.new(4);
             while (j < 4) {
-                let tempRow = поле[i];
-                let tempRow[j] = 0;
+                let поле[i*4+j] = 0;
                 let j = j + 1;
             }
             let j = 0;
 			let i = i + 1;
 		}
-
-        let rnd = Random.new(69, 13, 37, 160);
         
 		return this;
 	}
 
 	method void dispose() {
-        do Memory.deAlloc(поле[0]);
-        do Memory.deAlloc(поле[1]);
-        do Memory.deAlloc(поле[2]);
-        do Memory.deAlloc(поле[3]);
         do поле.dispose();
 		do Memory.deAlloc(this);
+		return;
+	}
+
+    method void slideRowLeft(Array row) {
+        var int temp, i, j;
+        var boolean exit;
+
+		let i = 1;
+
+		while (i < 4) {
+			let exit = false;
+
+			if (~(row[i] = 0)) {
+
+				let j = i;
+				while (~exit) {
+					let j = j - 1;
+                    // другая цифра
+					if (~(row[j] = 0)) {
+						let exit = true;
+						let j = j + 1;
+						let temp = row[i];
+						let row[i] = 0;
+						let row[j] = temp;
+					}
+					// стенка
+					if ((j = 0) & ~exit) {
+						let exit = true;
+						let temp = row[i];
+						let row[i] = 0;
+						let row[j] = temp;
+					}
+				}
+			}
+			let i = i + 1;
+		}
+        return;
+    }
+
+	method void slideLeft() {
+        var int i, j, temp;
+
+		let i = 0;
+        while (i < 4) {
+            let j = 0;
+            while (j < 4) {
+                let tempRow[j] = поле[4*i + j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempRow);
+            while (j < 4) {
+                let поле[4*i + j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+		return;
+	}
+
+	method void slideRight() {
+		var int i, j;
+
+		let i = 0;
+        let j = 0;
+        while (i < 4) {
+            while (j < 4) {
+                let tempRow[j] = поле[i*4+3-j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempRow);
+            while (j < 4) {
+                let поле[i*4+3-j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+        return;
+	}
+
+    method void mergeRowLeft(Array row) {
+        var int i;
+        let i = 0;
+
+        while (i < 3) {
+			if (row[i] = row[i+1]) {
+				let row[i] = row[i]*2;
+				let score = score + row[i];
+				let row[i + 1] = 0;
+			}
+            let i = i + 1;
+        }
+        return;
+    }
+
+	method void mergeLeft() {
+        var int i, j;
+		
+		let i = 0;
+        let j = 0;
+		while (i < 4) { 
+            while (j < 4) {
+                let tempRow[j] = поле[4*i + j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempRow);
+            while (j < 4) {
+                let поле[4*i + j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+		}
+		return; 
+	}
+
+	method void mergeRight() {
+		var int i, j;
+		let i = 0;
+        let j = 0;
+		while (i < 4) { 
+            while (j < 4) {
+                let tempRow[j] = поле[4*i+3-j];
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempRow);
+            while (j < 4) {
+                let поле[4*i+3-j] = tempRow[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+		}
+		return; 
+	}
+
+	method void moveLeft(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideLeft();
+		do mergeLeft();
+		do slideLeft();
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose(); 
+        if (~test) {
+            do checkFailed();
+        }
+		return; 
+	}
+
+	method void moveRight(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideRight();
+		do mergeRight();
+		do slideRight();
+		
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose();
+        if (~test) {
+            do checkFailed();
+        }
+		return;
+	}
+
+	method void slideDown() {
+		var int i, j;
+        let i = 0;
+        let j = 0;
+        
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[12 - (4*j) + i];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempCol);
+            while (j < 4) {
+                let поле[12 - (4*j) + i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+        return;
+	}
+
+	method void mergeDown() {
+		var int i, j;
+        let i = 0;
+        let j = 0;
+        
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[12 - (4*j) + i];  
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempCol);
+            while (j < 4) {
+                let поле[12 - (4*j) + i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+
+		return;
+	}
+
+	method void moveDown(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideDown();
+		do mergeDown();
+		do slideDown();
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose();
+        if (~test) {
+            do checkFailed();
+        }
+		return;
+	}
+
+    method void slideUp() {
+		var int i, j;
+
+        let i = 0;
+        let j = 0;
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[4*j+3-i];
+                let j = j + 1;
+            }
+            let j = 0;
+            do slideRowLeft(tempCol);
+            while (j < 4) {
+                let поле[4*j+3-i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+
+        return;
+	}
+
+	method void mergeUp() {
+        var int i, j;
+
+        
+        let i = 0;
+        let j = 0;
+        while (i < 4) {
+            while (j < 4) {
+                let tempCol[j] = поле[4*j+3-i];
+                let j = j + 1;
+            }
+            let j = 0;
+            do mergeRowLeft(tempCol);
+            while (j < 4) {
+                let поле[4*j+3-i] = tempCol[j];
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i + 1;
+        }
+
+		return; 
+	}
+
+	method void moveUp(boolean test) {
+		var Field original;
+		let original = copy();
+		do slideUp();
+		do mergeUp();
+		do slideUp();
+
+		if (~(compareState(original))) {
+			do spawnRandomNum();
+		}
+		do original.dispose();
+        if (~test) {
+            do checkFailed();
+        }
+		return;
+	}
+
+	method Array getState() {
+		var Array result;
+        var int i;
+        let i = 0;
+		let result = Array.new(16);
+        while (i < 16) {
+            let result[i] = поле[i];
+            let i = i + 1;
+        }
+		return result;
+	}
+
+	method void setFailed() {
+		let failed = true;
+		return;
+	}
+
+	method boolean getFail() {
+		return failed;
+	}
+
+
+	method boolean compareState(Field other) {
+		var Array полеOther;
+        var int i, j;
+        var boolean result;
+        let i = 0;
+        let j = 0;
+        let result = true;
+        let полеOther = other.getState();
+        while (result & (i < 4)) {
+            while (result & (j < 4)) {
+                let result = result & (поле[4*i+j] = полеOther[4*i+j]);
+                let j = j + 1;
+            }
+            let j = 0;
+            let i = i+1;
+        }
+        do полеOther.dispose();
+		return result;
+	}
+
+	method void spawnRandomNum() {
+		var int location, rowNum, colNum, iterations, num;
+		let iterations = 0;
+
+		let num = 2;
+		if (Random.random() > 143) {
+			let num = 4;
+		}
+		while (iterations < 160) {
+			let iterations = iterations + 1;
+			let location = Random.random() / 10;
+
+            if (поле[location] = 0) {
+                let поле[location] = num;
+                return;
+            } 
+		}
+		return;
+	}
+
+	method void configureState(Array prevField) {
+        var int i;
+        let i = 0;
+        while (i < 16) {
+            let поле[i] = prevField[i];
+            let i = i +1;
+        }
+		return;
+	}
+
+	method void setScore(int scoreArg) {
+		let score = scoreArg;
+		return;
+	}
+
+	method Field copy() {
+		var Field copy;
+        var Array newПоле;
+        var int i;
+        let i = 0;
+
+        let newПоле = Array.new(16);
+        while (i < 16) {
+            let newПоле[i] = поле[i];
+            let i = i + 1;
+        }
+		let copy = Field.new(startX, startY);
+		do copy.configureState(newПоле);
+        do newПоле.dispose();
+		do copy.setScore(score);
+		return copy;
+	}
+
+	method void checkFailed() {
+		var Field failTest;
+		let failTest = copy();
+		do failTest.moveLeft(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.moveUp(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.moveRight(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.moveDown(true);
+		if (~(compareState(failTest))) {
+			do failTest.dispose();
+			return;
+		}
+
+		do failTest.dispose();
+		do setFailed();
 		return;
 	}
 
 	method void display() {
 		var int x, y, memAddress;
 		var String string;
-        var Array tempRow;
 
 		do Screen.setColor(true); 
 		do Screen.drawRectangle(0, 24, 511, 255); 
@@ -75,16 +489,13 @@ class Field {
 
 			let memAddress = 16384 + 32 + (startX/16) + (startY*32) + (y*512) + x;
             
-            let tempRow = поле[y];
-            do draw(memAddress, tempRow[x]);
+            do draw(memAddress, поле[4*y+x]);
 			let x = x + 1;
 			if (x > 3) {
 				let y = y + 1;
 				let x = 0;
 			}
 		}
-		
-        do Memory.deAlloc(tempRow);
 		return;
 	}
 
@@ -345,472 +756,4 @@ class Field {
         do Memory.poke(memAddress+480, -1);
         return;
     }
-
-	method void setFailed() {
-		let failed = true;
-		return;
-	}
-
-	method boolean getFail() {
-		return failed;
-	}
-
-    method void slideRowLeft(Array row) {
-        var int temp, i, j;
-        var boolean exit;
-		// i should be 1. it represents the index of the access for row. (doesn't
-		// include 0 because there's nothing to slide into)
-		let i = 1;
-		// only iterate if i is in the indices of row. 
-		while (i < 4) {
-			let exit = false;
-			// check if the number is non-zero.
-			if (~(row[i] = 0)) {
-				// if it is, then you can move it until it's all the way to the
-				// left or about to hit another number.
-				let j = i;
-				while (~exit) {
-					let j = j - 1;
-					// case 1: it hits another number. 
-					if (~(row[j] = 0)) {
-						let exit = true;
-						let j = j + 1;
-						let temp = row[i];
-						let row[i] = 0;
-						let row[j] = temp;
-					}
-					// case 2: it hits all the way to the left.
-					if ((j = 0) & ~exit) {
-						let exit = true;
-						let temp = row[i];
-						let row[i] = 0;
-						let row[j] = temp;
-					}
-				}
-			}
-			let i = i + 1;
-		}
-        return;
-    }
-
-	method void slideLeft() {
-		var Array row;
-        var int i, j, temp;
-
-		let i = 0;
-        while (i < 4) {
-            let row = поле[i];
-            do slideRowLeft(row);
-            let i = i + 1;
-        }
-		return;
-	}
-
-	method void slideRight() {
-        var Array rowCopy, row;
-		var int i, j;
-
-		let i = 0;
-        let j = 0;
-        while (i < 4) {
-            let rowCopy = Array.new(4);
-            let row = поле[i];
-            while (j < 4) {
-                let rowCopy[j] = row[3-j];
-                let j = j + 1;
-            }
-            let j = 0;
-            do slideRowLeft(rowCopy);
-            while (j < 4) {
-                let row[j] = rowCopy[3-j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let поле[i] = row;
-            let i = i + 1;
-            do Memory.deAlloc(rowCopy);
-        }
-        return;
-	}
-
-    method void mergeRowLeft(Array row) {
-        var int i;
-        let i = 0;
-
-        while (i < 3) { // i = 3 represents row[3] and row[4], not existent
-			if (row[i] = row[i+1]) {
-				let row[i] = row[i]*2;
-				let score = score + row[i];
-				let row[i + 1] = 0;
-			}
-            let i = i + 1;
-        }
-        return;
-    }
-
-	method void mergeLeft() {
-		var Array row;
-        var int i;
-		
-		let i = 0; 
-		while (i < 4) { 
-            let row = поле[i];
-            do mergeRowLeft(row);
-            let i = i + 1;
-		}
-		return; 
-	}
-
-	method void mergeRight() {
-		var int i, j;
-        var Array row, rowCopy;
-		
-		let i = 0;
-        let j = 0;
-		while (i < 4) { 
-            let rowCopy = Array.new(4);
-            let row = поле[i];
-            while (j < 4) {
-                let rowCopy[j] = row[3-j];
-                let j = j + 1;
-            }
-            let j = 0;
-            do mergeRowLeft(rowCopy);
-            while (j < 4) {
-                let row[j] = rowCopy[3-j];
-                let j = j + 1;
-            }
-            let j = 0;
-            do Memory.deAlloc(rowCopy);
-            let i = i + 1;
-		}
-		return; 
-	}
-
-	/**
-	  * Description: Replicates the left command on the real 2048 app. 
-	  */
-	method void moveLeft(boolean test) {
-		var Field original;
-		let original = copy();
-		do slideLeft();
-		do mergeLeft();
-		do slideLeft();
-		if (~(compareState(original))) {
-			do spawnRandomNum();
-		}
-		do original.dispose(); 
-        if (~test) {
-            do checkFailed();
-        }
-		return; 
-	}
-
-	method void moveRight(boolean test) {
-		var Field original;
-		let original = copy();
-		do slideRight();
-		do mergeRight();
-		do slideRight();
-		
-		if (~(compareState(original))) {
-			do spawnRandomNum();
-		}
-		do original.dispose();
-        if (~test) {
-            do checkFailed();
-        }
-		return;
-	}
-
-	method boolean compareState(Field other) {
-		var Array stateOther, row1Other, row2Other, row3Other, row4Other, row1, row2, row3, row4;
-		let stateOther = other.getState();
-		let row1Other = stateOther[0];
-		let row2Other = stateOther[1];
-		let row3Other = stateOther[2];
-		let row4Other = stateOther[3];
-        let row1 = поле[0];
-		let row2 = поле[1];
-		let row3 = поле[2];
-		let row4 = поле[3];
-		return (row1[0] = row1Other[0]) &
-		       (row1[1] = row1Other[1]) &
-		       (row1[2] = row1Other[2]) &
-		       (row1[3] = row1Other[3]) &
-		       (row2[0] = row2Other[0]) &
-		       (row2[1] = row2Other[1]) &
-		       (row2[2] = row2Other[2]) &
-		       (row2[3] = row2Other[3]) &
-		       (row3[0] = row3Other[0]) &
-		       (row3[1] = row3Other[1]) &
-		       (row3[2] = row3Other[2]) &
-		       (row3[3] = row3Other[3]) &
-		       (row4[0] = row4Other[0]) &
-		       (row4[1] = row4Other[1]) &
-		       (row4[2] = row4Other[2]) &
-		       (row4[3] = row4Other[3]);
-	}
-
-	method Array getState() {
-		var Array result;
-		let result = Array.new(4);
-		let result[0] = поле[0];
-		let result[1] = поле[1];
-		let result[2] = поле[2];
-		let result[3] = поле[3];
-		return result;
-	}
-
-	method void slideUp() {
-		var int i, j, temp;
-		var boolean exit;
-        var Array col, row;
-        let i = 0;
-        let j = 0;
-        
-        while (i < 4) {
-            let col = Array.new(4);
-            while (j < 4) {
-                let row = поле[j];
-                let col[j] = row[3-i];
-                let j = j + 1;
-            }
-            let j = 0;
-            do slideRowLeft(col);
-            while (j < 4) {
-                let row = поле[j];
-                let row[3-i] = col[j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let i = i + 1;
-            do Memory.deAlloc(col);
-        }
-        return;
-	}
-
-	method void mergeUp() {
-        var Array col, row;
-		var int i, j;
-		
-		let i = 0; // this represents the pair of row1[0] and row1[1]
-		while (i < 4) {
-            let col = Array.new(4);
-            while (j < 4) {
-                let row = поле[j];
-                let col[j] = row[3-i];
-                let j = j + 1;
-            }
-            let j = 0;
-            do mergeRowLeft(col);
-            while (j < 4) {
-                let row = поле[j];
-                let row[3-i] = col[j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let i = i + 1;
-            do Memory.deAlloc(col);
-        }
-		return; 
-	}
-
-	method void moveUp(boolean test) {
-		var Field original;
-		let original = copy();
-		do slideUp();
-		do mergeUp();
-		do slideUp();
-		// only spawn if the field state changed
-		if (~(compareState(original))) {
-			do spawnRandomNum();
-		}
-		do original.dispose(); // saves space
-        if (~test) {
-            do checkFailed();
-        }
-		return; // part of the language
-	}
-
-	/**
-	  * Description: Slides each number to the bottom as much as they can.
-	  */
-	method void slideDown() {
-		var int i, j;
-        var Array col, row;
-        let i = 0;
-        let j = 0;
-        
-        while (i < 4) {
-            let col = Array.new(4);
-            while (j < 4) {
-                let row = поле[3-j];
-                let col[j] = row[i];
-                let j = j + 1;
-            }
-            let j = 0;
-            do slideRowLeft(col);
-            while (j < 4) {
-                let row = поле[3-j];
-                let row[i] = col[j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let i = i + 1;
-            do Memory.deAlloc(col);
-        }
-        return;
-	}
-
-	method void mergeDown() {
-		var int i, j;
-        var Array col, row;
-        let i = 0;
-        let j = 0;
-        
-        while (i < 4) {
-            let col = Array.new(4);
-            while (j < 4) {
-                let row = поле[3-j];
-                let col[j] = row[i];
-                let j = j + 1;
-            }
-            let j = 0;
-            do mergeRowLeft(col);
-            while (j < 4) {
-                let row = поле[3-j];
-                let row[i] = col[j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let i = i + 1;
-            do Memory.deAlloc(col);
-        }
-		return; // part of the language		
-	}
-
-	method void moveDown(boolean test) {
-		var Field original;
-		let original = copy();
-		do slideDown();
-		do mergeDown();
-		do slideDown();
-		if (~(compareState(original))) {
-			do spawnRandomNum();
-		}
-		do original.dispose();
-        if (~test) {
-            do checkFailed();
-        }
-		return;
-	}
-
-	method void spawnRandomNum() {
-		var int location, rowNum, colNum, iterations, num;
-        var Array row;
-		let iterations = 0;
-
-		let num = 2;
-		if (rnd.random() > 143) {
-			let num = 4;
-		}
-		while (iterations < 160) {
-			let iterations = iterations + 1;
-			let location = rnd.random() / 10;
-			let colNum = MathExtension.modulus(location, 4);
-            let rowNum = location/4;
-
-            if ((rowNum > -1) & (rowNum < 4)) {
-                let row = поле[rowNum];
-                if ((colNum > -1) & (colNum < 4) & (row[colNum] = 0)) {
-                    let row[colNum] = num;
-                    return;
-                }
-            } 
-		}
-		return;
-	}
-
-	method void configureState(Array prevField) {
-        var int i, j;
-        var Array row, rowCopy;
-        let i = 0;
-        let j = 0;
-
-        while (i < 4) {
-            let row = поле[i];
-            let rowCopy = prevField[i];
-            while (j < 4) {
-                let row[j] = rowCopy[j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let i = i + 1;
-        }
-
-		return;
-	}
-
-	method void setScore(int scoreArg) {
-		let score = scoreArg;
-		return;
-	}
-
-	method Field copy() {
-		var Field copy;
-        var Array rowCopy, row, newField;
-        var int i, j;
-        let i = 0;
-        let j = 0;
-
-        let newField = Array.new(4);
-        while (i < 4) {
-            let rowCopy = Array.new(4);
-            let row = поле[i];
-            while (j < 4) {
-                let rowCopy[j] = row[j];
-                let j = j + 1;
-            }
-            let j = 0;
-            let newField[i] = rowCopy;
-            let i = i + 1;
-        }
-		let copy = Field.new(startX, startY);
-		do copy.configureState(newField);
-		do copy.setScore(score);
-		return copy;
-	}
-
-	method void checkFailed() {
-		var Field failTest;
-		let failTest = copy();
-		do failTest.moveLeft(true);
-		if (~(compareState(failTest))) {
-			do failTest.dispose();
-			return;
-		}
-
-		do failTest.moveUp(true);
-		if (~(compareState(failTest))) {
-			do failTest.dispose();
-			return;
-		}
-
-		do failTest.moveRight(true);
-		if (~(compareState(failTest))) {
-			do failTest.dispose();
-			return;
-		}
-
-		do failTest.moveDown(true);
-		if (~(compareState(failTest))) {
-			do failTest.dispose();
-			return;
-		}
-
-		do failTest.dispose();
-		do setFailed();
-		return;
-	}
 }

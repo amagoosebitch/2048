@@ -1,7 +1,7 @@
 class MathExtension {
     function int modulus(int a, int b) {
 		// Jack умеет только инты, так что (a/b) - целочисленное деление.
-        // (a/b)*b - ближайшое к a число кратное b.
+        // (a/b)*b - ближайшeе к a число кратное b.
         // a - (a/b)*b - как раз остаток от деления 
 		return a - ((a / b) * b);
 	}
