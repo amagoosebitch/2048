@@ -1,38 +1,14 @@
 class Main {
-	static int seed, a, c, m;
-	/**
-	  * Description: The function that always runs first, Main.main(). 
-	  */
 	function void main() {
         var Field поле;
 		var int key;
-		// preparing for random()
-		let seed = 44;
-		let a = 21;
-		let c = 41;
-		let m = 160;
-		// The base of the 2048 game: a Game itself. 
 		let поле = Field.new(32, 32);
-		do поле.convertRowsToCols();
-		// Method 1 below. Use when still testing non-arrow-key-related subjects.
-		// In a While True loop...
-		// while (true) {
-		// 	// Display the поле. 
-		// 	do поле.display();
-		// 	// Wait for a decisecond to re-display. 
-		// 	do Sys.wait(100);
-		// }
-		/*
-		 * Method 2 below. When starting, comment out method 1 code. Use when 
-		 * testing arrow-key-related subjects. Use an square-dance-inspired
-		 * algorithm. 
-		 */
-		// starter
+
 		do поле.spawnRandomNum();
 		do поле.spawnRandomNum();
-		// The поле doesn't display immediately!
+		
 		do поле.display();
-		// In a While True loop...
+		
 		while (true) {
 			// In a while loop with the condition of the game not being failed...
 			while (~поле.getFail()) {
@@ -42,26 +18,29 @@ class Main {
 				while (Memory.peek(24576) = 0) {}
 				// Check the key. 
 				let key = Memory.peek(24576);
-				// Left arrow: Call moveLeft().
+				
+                // влево
 				if (key = 130) {
-					do поле.moveLeft();
+					do поле.moveLeft(false);
 				}
-				// Up arrow: Call moveUp().
+				// вверх
 				if (key = 131) {
-					do поле.moveUp();
+					do поле.moveUp(false);
 				}
-				// Right arrow: Call moveRight().
+				// вправо
 				if (key = 132) {
-					do поле.moveRight();
+					do поле.moveRight(false);
 				}
-				// Down arrow: Call moveDown(). 
+				// вниз
 				if (key = 133) {
-					do поле.moveDown();
+					do поле.moveDown(false);
 				}
+
 				// R: Retry the game.
 				if (key = 82) {
+                    do поле.dispose();
 					let поле = Field.new(32, 32);
-					// starter
+
 					do поле.spawnRandomNum();
 					do поле.spawnRandomNum();
 				}
@@ -74,58 +53,28 @@ class Main {
 			// In a while loop with the condition of the game not being 
 			// restarted...
 			while (поле.getFail()) {
-				// Display 'GAME FAILED' on the top-left corner of the screen. 
+				
 				do Output.moveCursor(0, 0);
 				do Output.printString("GAME FAILED");
-				// While the key is 0, do nothing. 
+				
 				while (Memory.peek(24576) = 0) {}
-				// Check the key. 
+				
 				let key = Memory.peek(24576);
-				// g: Make it so that the game has been restarted. 
+				
+                // g - new *G*ame
 				if (key = 71) {
 					do поле.dispose();
 					let поле = Field.new(32, 32);		
-					// starter
+					
 					do поле.spawnRandomNum();
 					do поле.spawnRandomNum();
 					do поле.display();
 				}
-				// While the key is not 0, do nothing. 
+				
 				while (~(Memory.peek(24576) = 0)) {}
 			}
 		}
 
 		return;
-	}
-	/**
-	  * Description: The random() function in Math.jack. It uses the linear 
-	  *              congruential generator method, always producing the same 
-	  *              results every run. However, the period is 1600, making it 
-	  *              near impossible to tell during a run without analyzing 
-	  *              patterns for 1600 moves. 
-	  * Algorithm description:
-	  *              seed — The starting number to work with. It is the only 
-	  *                     part of the algorithm that changes. 
-	  *              a — The multiplier for seed. 
-	  *              c — After multiplying "seed" and "a", c is added. 
-	  *              m — After all of that calculation is done, m, the modulus, 
-	  *                  comes into play. 
-	  */
-	function int random() {
-		var int result;
-		let result = Main.modulus(((seed*a) + c), m);
-		let seed = result;
-		return result/10; // originally, the max is 1600. Now it's 100. 
-	}
-
-	/**
-      * Description: Math doesn't have a modulus in it. This function will 
-      *              fill in that gap. 
-	  */
-	function int modulus(int a, int b) {
-		// Although (a/b)*b might seem like just a, Jack doesn't support floating
-		// point division and floors instead, making (a/b)*b the biggest multiple 
-		// of b that doesn't go over a, exactly what we want to subtract from a. 
-		return a - ((a/b)*b);
 	}
 }
